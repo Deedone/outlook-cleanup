@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "Outlook cleanup",
+	"description": "Outlook cleanup",
+  "version": "2.136.0",
+  "author": "Ddone",
+  "applications": {
+    "gecko": {
+        "id": "safelinks-cleanup@deedone.org",
+        "strict_min_version": "91.0"
+    }
+  },
+  "developer": {
+	  "name": "Ddone",
+    "url": "https://github.com/Deedone/outlook-cleanup"
+	},
+  "background": {
+    "scripts": ["src/background-script.js"]
+  },
+  "permissions": ["storage", "compose"]
+}

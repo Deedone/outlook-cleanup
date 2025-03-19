@@ -83,54 +83,39 @@ var refwdformatter = {
       let htmlbody = details.body;//b.innerHTML;
       //console.log(details);
 
+      //https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.kernel.org%2Fdoc%2FDocumentation%2Fdevicetree%2Fbindings%2Fpci%2Fpci-iommu.txt&data=05%7C02%7CMykyta_Poturai%40epam.com%7Cf9d6204a8ab946b9f36f08dd6563f203%7Cb41b72d04e9f4c268a69f949f367c91d%7C1%7C0%7C638778202132702429%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=C6nyqgwkewqgSR65siicN6BqgdvSOtTKiCKguD1lB%2BQ%3D&reserved=0
       // Main Logic
       if (htmlbody !== "<br>") {
-
+      
         if (ret && isPlainText) {
-
+      
           let textbody = details.plainTextBody;
-
-          textbody = textbody.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\r\n").
-            replace(/\n> {2}/g, "\n ").
-            replace(/\n> /g, "\n").
-            replace(/\n>((>)+) /g, "\n$1 ").
-            replace(/\n>((>)+)\r/g, "\n$1\r").
-            replace(/\n>((>)+)$/g, "\n$1");
-
-          browser.compose.setComposeDetails(tab.id, { plainTextBody: textbody });
-
-        } else if (reh && isHtml) {
-
-          let document = new DOMParser().parseFromString(htmlbody, "text/html");
-
-          if (document.body.hasChildNodes()) {
-            var childNodes = document.body.childNodes;
-            //console.log(childNodes);
-            var is1stChild = true;
-            for (var l = 0; l < childNodes.length; l++) {
-              if (childNodes[l].tagName == "BLOCKQUOTE") {
-                is1stChild = false;
-                // Replace the first <blockquote> tag with new <div> tag
-                var newdiv = document.createElement("div");
-                while (childNodes[l].firstChild) {
-                  newdiv.appendChild(childNodes[l].firstChild); // *Moves* the child
-                }
-                newdiv.setAttribute('class', 'replaced-blockquote');
-                for (var index = childNodes[l].attributes.length - 1; index >= 0; --index) {
-                  newdiv.attributes.setNamedItem(childNodes[l].attributes[index].cloneNode());
-                }
-                childNodes[l].parentNode.replaceChild(newdiv, childNodes[l]);
-                break;
+      
+          while (true) {
+            // Find first SafeLinks URL
+            let safeLinksIndex = textbody.search(/https:\/\/[a-zA-Z0-9.-]+\.safelinks\.protection\.outlook\.com\/\?url=/);
+            if (safeLinksIndex !== -1) {
+              let safeLinksUrl = textbody.substring(safeLinksIndex);
+              let safeLinksEnd = safeLinksUrl.search(/[\s\n]/); // Search for space or newline
+              if (safeLinksEnd === -1) {
+                safeLinksEnd = safeLinksUrl.length;
               }
-              if (!is1stChild) break;
+              safeLinksUrl = safeLinksUrl.substring(0, safeLinksEnd);
+              // Extract original URL with URL parsing
+              let url = new URL(safeLinksUrl);
+              let originalUrl = url.searchParams.get("url");
+              // Replace SafeLinks URL with original URL
+              // If there is space before the SafeLinks URL, add it to the replacement
+              textbody = textbody.replace(safeLinksUrl, originalUrl);
+              console.log("Replaced: " + safeLinksUrl + " with " + originalUrl);
+            } else {
+              break;
             }
-
-            let html = new XMLSerializer().serializeToString(document);
-            //console.log(html);
-            browser.compose.setComposeDetails(tab.id, { body: html });
           }
-
-        }
+      
+          browser.compose.setComposeDetails(tab.id, { plainTextBody: textbody });
+      
+        } 
       }
 
     }
